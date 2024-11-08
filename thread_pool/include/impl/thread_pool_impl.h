@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <exception>
 #include "task.h"
 
 namespace mylib
@@ -13,7 +14,7 @@ class result_impl_helper
 {
 public:
     result_impl_helper(const Func& f)
-        : _f(f), _executed(false)
+        : _f(f), _executed(false), _e(nullptr)
     {
     }
 
@@ -23,13 +24,21 @@ public:
         _cond.wait(lock, [&] {
             return _executed;
         });
+        if (_e) {
+            std::rethrow_exception(_e);
+        }
         return _res;
     }
 
     void execute()
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        execute_internal();
+        try {
+            execute_internal();
+        }catch(const std::exception& e) {
+            _e = std::current_exception();
+        }
+        
         _executed = true;
         _cond.notify_one();
     }
@@ -54,6 +63,7 @@ private:
     bool _executed;
     std::mutex _mutex;
     std::condition_variable _cond;
+    std::exception_ptr _e;
 
     friend class result<Func, R>;
 

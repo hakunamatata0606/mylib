@@ -42,11 +42,7 @@ void worker::thread_func(worker* wrk)
     logger.get()->debug("worker_impl::thread_func(): started, id: {}", wrk->_id);
     while (!wrk->_stopped) {
         task_ptr_t t = wrk->_tasks.get()->get_task();
-        try {
-            t.get()->execute();
-        }catch(std::exception err) {
-            logger.get()->debug("worker_impl::thread_func(): got exception: {}", err.what());
-        }
+        t.get()->execute();
     }
 
     logger.get()->debug("worker_impl::thread_func(): stopped, id: {}", wrk->_id);

@@ -4,6 +4,13 @@
 
 using namespace mylib;
 
+class MyCustomException : public std::exception {
+public:
+    const char * what () const noexcept override {
+        return "Custom C++ Exception";
+    }
+};
+
 int foo(int i, const std::string& s) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     std::cout << "FOOOOOOOO " << s << "\n";
@@ -34,6 +41,15 @@ int main()
     std::cout << "GOT: i2 " << i2 << "\n";
     std::cout << "GOT: i3 " << i3 << "\n";
     std::cout << "GOT: i4 " << i4 << "\n";
-    
+
+    auto a5 = p.add_task([]{
+        throw MyCustomException(); 
+    });
+
+    try {
+        auto v = a5.get()->get();
+    }catch(const std::exception& e) {
+        std::cout << "GOT exception: " << e.what() << "\n";
+    }
     return 0;
 }
